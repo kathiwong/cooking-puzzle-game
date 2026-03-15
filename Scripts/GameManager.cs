@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
+    private static GameManager activeInstance;
+
     //customer
     public CustomerOrderManager orderManager;
     
@@ -25,38 +27,46 @@ public class GameManager : MonoBehaviour
     public Button give32Button;
     public Button give64Button;
     public Button give128Button;
-
-/* //destroying and reloading GameManager causes issues with static instance reference, so using DontDestroyOnLoad instead. If we want to reload the scene to reset the game, we can just call NewGame() instead of reloading the scene, which will preserve the GameManager instance and avoid issues with static references.
-public static GameManager Instance;
-
-private void Awake()
-{
-    if (Instance != null && Instance != this)
+    private void Awake()
     {
-        Destroy(gameObject);
-        return;
+        if (activeInstance != null && activeInstance != this)
+        {
+            Debug.LogWarning(
+                $"Duplicate GameManager on '{gameObject.name}' in scene '{gameObject.scene.name}'. " +
+                $"Keeping '{activeInstance.gameObject.name}' and disabling this component."
+            );
+            enabled = false;
+            return;
+        }
+
+        activeInstance = this;
     }
-    Instance = this;
-    DontDestroyOnLoad(gameObject); // only if you want it to persist across scenes
-}
-*/
+
+    private void OnDestroy()
+    {
+        if (activeInstance == this)
+        {
+            activeInstance = null;
+        }
+    }
+
     private void Start()
-{
-    Debug.Log($"GameManager START: name={gameObject.name}, id={GetInstanceID()}, active={gameObject.activeInHierarchy}, scene={gameObject.scene.name}");
-    NewGame();
+    {
+        Debug.Log($"GameManager START: name={gameObject.name}, id={GetInstanceID()}, active={gameObject.activeInHierarchy}, scene={gameObject.scene.name}");
+        NewGame();
 
-    // Remove any old listeners to avoid double-calls if the scene reloads
-    //if (give8Button != null)  { give8Button.onClick.RemoveAllListeners();  give8Button.onClick.AddListener(() => OnGivePressed(8)); }
-    //if (give16Button != null)  { give16Button.onClick.RemoveAllListeners();  give16Button.onClick.AddListener(() => OnGivePressed(16)); }
-    //if (give32Button != null)  { give32Button.onClick.RemoveAllListeners();  give32Button.onClick.AddListener(() => OnGivePressed(32)); }
-    //if (give64Button != null)  { give64Button.onClick.RemoveAllListeners();  give64Button.onClick.AddListener(() => OnGivePressed(64)); }
-    //if (give128Button != null) { give128Button.onClick.RemoveAllListeners(); give128Button.onClick.AddListener(() => OnGivePressed(128)); }
+        // Remove any old listeners to avoid double-calls if the scene reloads
+        //if (give8Button != null)  { give8Button.onClick.RemoveAllListeners();  give8Button.onClick.AddListener(() => OnGivePressed(8)); }
+        //if (give16Button != null)  { give16Button.onClick.RemoveAllListeners();  give16Button.onClick.AddListener(() => OnGivePressed(16)); }
+        //if (give32Button != null)  { give32Button.onClick.RemoveAllListeners();  give32Button.onClick.AddListener(() => OnGivePressed(32)); }
+        //if (give64Button != null)  { give64Button.onClick.RemoveAllListeners();  give64Button.onClick.AddListener(() => OnGivePressed(64)); }
+        //if (give128Button != null) { give128Button.onClick.RemoveAllListeners(); give128Button.onClick.AddListener(() => OnGivePressed(128)); }
 
-    // Initialize score UI
-    if (scoreText != null) scoreText.text = score.ToString();
-}
+        // Initialize score UI
+        if (scoreText != null) scoreText.text = score.ToString();
+    }
 
-private void Update()
+    private void Update()
     {
         //number keys for giving tiles
             if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
